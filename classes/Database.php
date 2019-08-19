@@ -13,24 +13,28 @@ Class Database {
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
-            return $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            return $res;
         }
 
-        $sql = "SELECT *
+        $sql = 'SELECT *
                 FROM user_info
-                WHERE ID = $id";
+                WHERE ID = "' . $id . '"';
 
         if (!$result = $mysqli->query($sql)) {
-            return $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            return $res;
         }
 
         if ($result->num_rows === 0) {
-            return $res["message"] = "User does not exist";
+            $res["message"] = "User does not exist";
+            return $res;
+
         }
 
         $res = [
             "success" => true,
-            "message" => "ok",
+            "message" => "OK",
             "data" => $result->fetch_assoc()
         ];
 
@@ -49,24 +53,27 @@ Class Database {
             $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
         }
 
-        $sql = "SELECT user_authorize.ID AS ID
+        $sql = 'SELECT user_authorize.ID
                 FROM user_authorize
                          LEFT JOIN
                      user_info ON user_authorize.ID = user_info.ID
-                WHERE user_authorize.LOGIN = $log AND user_authorize.PASS = $pass
-                   OR user_info.EMAIL = $log AND user_authorize.PASS = $pass";
+                WHERE user_authorize.LOGIN = "' . $log . '" AND user_authorize.PASS = "' . $pass . '"
+                   OR user_info.EMAIL = "' . $log . '" AND user_authorize.PASS = "' . $pass . '"';
 
         if (!$result = $mysqli->query($sql)) {
-            return $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            return $res;
         }
 
         if ($result->num_rows === 0) {
-            return $res["message"] = "User does not exist";
+            $res["message"] = "User does not exist";
+            return $res;
+
         }
 
         $res = [
             "success" => true,
-            "message" => "ok",
+            "message" => "OK",
             "data" => $result->fetch_assoc()["ID"]
         ];
 
@@ -82,24 +89,27 @@ Class Database {
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
-            return $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            return $res;
         }
 
-        $sql = "SELECT *
+        $sql = 'SELECT *
                 FROM user_permissions
-                WHERE ID = $id";
+                WHERE ID = "' . $id . '"';
 
         if (!$result = $mysqli->query($sql)) {
-            return $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            return $res;
         }
 
         if ($result->num_rows === 0) {
-            return $res["message"] = "User does not exist";
+            $res["message"] = "User does not exist";
+            return $res;
         }
 
         $res = [
             "success" => true,
-            "message" => "ok",
+            "message" => "OK",
             "data" => $result->fetch_assoc()
         ];
 

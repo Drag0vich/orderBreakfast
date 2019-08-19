@@ -3,7 +3,7 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="91903a1d-68a8-43b8-aedf-4b14c5e4bb81" name="order" url="https://localhost">
-        <fileTransfer port="0" mountedRoot="/var/www/bitrix" accessType="MOUNT" />
+        <fileTransfer port="0" mountedRoot="/var/www/order" accessType="MOUNT" />
       </webServer>
     </option>
   </component>
