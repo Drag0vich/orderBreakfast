@@ -1,4 +1,10 @@
 <?php
 
-class Session{
+namespace classes;
+
+class Session {
+    public static function startSession() {
+
+    }
+
 }
