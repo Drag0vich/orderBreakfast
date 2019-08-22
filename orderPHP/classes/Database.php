@@ -1,8 +1,7 @@
 <?php
 
 namespace Order;
-require_once $_SERVER['DOCUMENT_ROOT'] . '/define.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/include.php';
 
 Class Database {
     public static function getUserInfoById($id) {
@@ -22,8 +21,10 @@ Class Database {
                 FROM user_info
                 WHERE ID = "' . $id . '"';
 
+        $sql = $mysqli->real_escape_string($sql);
+
         if (!$result = $mysqli->query($sql)) {
-            $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
             return $res;
         }
 
@@ -48,8 +49,6 @@ Class Database {
             "message" => "Unknown error in Database.getUserInfoById"
         ];
 
-        Utils::dump(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
-
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
@@ -63,9 +62,10 @@ Class Database {
                 WHERE user_authorize.LOGIN = "' . $log . '" AND user_authorize.PASS = "' . MD5($pass) . '"
                    OR user_info.EMAIL = "' . $log . '" AND user_authorize.PASS = "' . MD5($pass) . '"';
 
+        $sql = $mysqli->real_escape_string($sql);
+
         if (!$result = $mysqli->query($sql)) {
-            Utils::dump($mysqli->query($sql));
-            $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
             return $res;
         }
 
@@ -101,8 +101,10 @@ Class Database {
                 FROM user_permissions
                 WHERE ID = "' . $id . '"';
 
+        $sql = $mysqli->real_escape_string($sql);
+
         if (!$result = $mysqli->query($sql)) {
-            $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
             return $res;
         }
 
@@ -138,6 +140,8 @@ Class Database {
         $sql = 'INSERT INTO user_info (GIVEN_NAME, FAMILY_NAME, EMAIL, USERNAME, TIMESTAMP)
                     VALUE ("' . $name . '", "' . $surname . '", "' . $email . '", "' . $login . '", "' . $timestamp . '")';
 
+        $sql = $mysqli->real_escape_string($sql);
+
         if ($mysqli->query($sql)) {
             $sql = 'SELECT *
                 FROM user_info
@@ -153,7 +157,7 @@ Class Database {
                     VALUE ("' . $userId . '")';
             $mysqli->query($sql);
         } else {
-            $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
         }
 
         $res = [
@@ -165,12 +169,94 @@ Class Database {
     }
 
     /**
-     * @param $userId =
+     * @param $userId    =
      * @param $sessionId = $_COOKIE["PHPSESSID"]
      * @param $userAgent = $_SERVER["HTTP_USER_AGENT"]
-     * @param $ipAddress =
+     * @param $ipAddress = $_SERVER["HTTP_CLIENT_IP"]
      */
     public static function addSessionInfo($userId, $sessionId, $userAgent, $ipAddress) {
+        $res = [
+            "success" => false,
+            "message" => "Unknown error in Database.addSessionInfo"
+        ];
 
+        $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
+        if ($mysqli->connect_errno) {
+            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            return $res;
+        }
+
+        $timestamp = date("Y-m-d H:i:s");
+
+        $sql = 'INSERT INTO user_info (ID, SESSION_ID, USER_AGENT, IP_ADDRESS, TIMESTAMP)
+                    VALUE ("' . $userId . '", "' . $sessionId . '", "' . $userAgent . '", "' . $ipAddress . '", "' . $timestamp . '")';
+
+        $sql = $mysqli->real_escape_string($sql);
+
+        if (!$result = $mysqli->query($sql)) {
+            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
+            return $res;
+        }
+
+        $res = [
+            "success" => true,
+            "message" => "OK"
+        ];
+
+        return $res;
+    }
+
+    public static function removeUser(&$user) {
+        $res = [
+            "success" => false,
+            "message" => "Unknown error in Database.removeUser"
+        ];
+
+        $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
+        if ($mysqli->connect_errno) {
+            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            return $res;
+        }
+
+        $sql = 'DELETE
+                FROM user_info
+                WHERE ID = "' . $user->getId() . '"';
+
+        $sql = $mysqli->real_escape_string($sql);
+
+        if ($mysqli->query($sql)) {
+            $sql = 'DELETE
+                    FROM user_auth_log
+                    WHERE ID = "' . $user->getId() . '"';
+
+            $sql = $mysqli->real_escape_string($sql);
+            $mysqli->query($sql);
+
+            $sql = 'DELETE
+                    FROM user_authorize
+                    WHERE ID = "' . $user->getId() . '"';
+
+            $sql = $mysqli->real_escape_string($sql);
+            $mysqli->query($sql);
+
+            $sql = 'DELETE
+                    FROM user_permission
+                    WHERE ID = "' . $user->getId() . '"';
+
+            $sql = $mysqli->real_escape_string($sql);
+            $mysqli->query($sql);
+        } else {
+            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
+            return $res;
+        }
+
+        $res = [
+            "success" => true,
+            "message" => "OK"
+        ];
+
+        return $res;
     }
 }
