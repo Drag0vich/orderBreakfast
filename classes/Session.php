@@ -1,6 +1,6 @@
 <?php
 
-namespace classes;
+namespace Order;
 
 class Session {
     public static function startSession() {

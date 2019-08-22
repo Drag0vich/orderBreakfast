@@ -1,7 +1,8 @@
 <?php
 
-namespace classes;
+namespace Order;
 require_once $_SERVER['DOCUMENT_ROOT'] . '/define.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
 
 Class Database {
     public static function getUserInfoById($id) {
@@ -47,6 +48,8 @@ Class Database {
             "message" => "Unknown error in Database.getUserInfoById"
         ];
 
+        Utils::dump(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
@@ -61,6 +64,7 @@ Class Database {
                    OR user_info.EMAIL = "' . $log . '" AND user_authorize.PASS = "' . MD5($pass) . '"';
 
         if (!$result = $mysqli->query($sql)) {
+            Utils::dump($mysqli->query($sql));
             $res["message"] = 'SQL = (' . $sql . ') Num error = (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
             return $res;
         }
@@ -158,5 +162,15 @@ Class Database {
         ];
 
         return $res;
+    }
+
+    /**
+     * @param $userId =
+     * @param $sessionId = $_COOKIE["PHPSESSID"]
+     * @param $userAgent = $_SERVER["HTTP_USER_AGENT"]
+     * @param $ipAddress =
+     */
+    public static function addSessionInfo($userId, $sessionId, $userAgent, $ipAddress) {
+
     }
 }
