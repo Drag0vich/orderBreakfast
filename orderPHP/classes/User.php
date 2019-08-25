@@ -2,23 +2,26 @@
 
 namespace Order;
 require_once $_SERVER['DOCUMENT_ROOT'] . '/include.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/interface/entity.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/interface/save.php';
 
 class User implements Save, Entity {
     protected $id = null;
     protected $name = "";
     protected $surname = "";
     protected $email = "";
-    protected $username = "";
+    protected $login = "";
     protected $password = "";
+    protected $dateRegister = null;
 
     function __construct() {
         $this->id = null;
         $this->name = "";
         $this->surname = "";
         $this->email = "";
-        $this->username = "";
+        $this->login = "";
         $this->password = "";
-
+        $this->dateRegister = null;
     }
 
     function __destruct() {
@@ -30,11 +33,12 @@ class User implements Save, Entity {
         if ($array) {
             $user = new User();
             $user->setId($array["ID"]);
-            $user->setName($array["NAME"]);
-            $user->setSurname($array["SURNAME"]);
+            $user->setName($array["GIVEN_NAME"]);
+            $user->setSurname($array["FAMILY_NAME"]);
             $user->setEmail($array["EMAIL"]);
-            $user->setUsername($array["USERNAME"]);
-            $user->setPassword($array["PASSWORD"]);
+            $user->setLogin($array["LOGIN"]);
+            $user->setPassword($array["PASS"]);
+            $user->setDateRegister($array["DATE_REGISTER"]);
         }
         return $user;
     }
@@ -45,8 +49,9 @@ class User implements Save, Entity {
             "name" => $this->getName(),
             "surname" => $this->getSurname(),
             "email" => $this->getEmail(),
-            "username" => $this->getUsername(),
+            "login" => $this->getLogin(),
             "password" => $this->getPassword(),
+            "date_register" => $this->getDateRegister(),
         );
         return $user;
     }
@@ -68,7 +73,7 @@ class User implements Save, Entity {
     }
 
     function setSurname($surname) {
-        $this->surname = (int)$surname;
+        $this->surname = $surname;
     }
 
     function getSurname() {
@@ -83,12 +88,12 @@ class User implements Save, Entity {
         return $this->email;
     }
 
-    function setUsername($username) {
-        $this->username = $username;
+    function setLogin($login) {
+        $this->login = $login;
     }
 
-    function getUsername() {
-        return $this->username;
+    function getLogin() {
+        return $this->login;
     }
 
     function setPassword($password) {
@@ -97,6 +102,14 @@ class User implements Save, Entity {
 
     function getPassword() {
         return $this->password;
+    }
+
+    function setDateRegister($datetime) {
+        $this->dateRegister = $datetime;
+    }
+
+    function getDateRegister() {
+        return $this->dateRegister;
     }
 
     public function save() {

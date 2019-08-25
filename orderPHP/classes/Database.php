@@ -2,8 +2,6 @@
 
 namespace Order;
 require_once $_SERVER['DOCUMENT_ROOT'] . '/include.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/interface/entity.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/interface/save.php';
 
 Class Database {
     public static function getUserInfoById($id) {
@@ -15,18 +13,18 @@ Class Database {
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
-            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = "Connect Error (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
             return $res;
         }
+
+        $id = $mysqli->real_escape_string($id);
 
         $sql = 'SELECT *
                 FROM user_info
                 WHERE ID = "' . $id . '"';
 
-        $sql = $mysqli->real_escape_string($sql);
-
         if (!$result = $mysqli->query($sql)) {
-            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
+            $res["message"] = "SQL:\n" . $sql . "\n Num error: " . $mysqli->connect_errno . "\n" . $mysqli->connect_error;
             return $res;
         }
 
@@ -54,20 +52,20 @@ Class Database {
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
-            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = "Connect Error (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
         }
 
-        $sql = 'SELECT user_authorize.ID
-                FROM user_authorize
-                         LEFT JOIN
-                     user_info ON user_authorize.ID = user_info.ID
-                WHERE user_authorize.LOGIN = "' . $log . '" AND user_authorize.PASS = "' . MD5($pass) . '"
-                   OR user_info.EMAIL = "' . $log . '" AND user_authorize.PASS = "' . MD5($pass) . '"';
+        $log = $mysqli->real_escape_string($log);
+        $pass = $mysqli->real_escape_string($pass);
 
-        $sql = $mysqli->real_escape_string($sql);
+        $sql = 'SELECT *
+                FROM user_info
+                WHERE LOGIN = "' . $log . '"
+                    OR EMAIL = "' . $log . '"
+                    AND PASS = "' . MD5($pass) . '"';
 
         if (!$result = $mysqli->query($sql)) {
-            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
+            $res["message"] = "SQL:\n" . $sql . "\n Num error: " . $mysqli->connect_errno . "\n" . $mysqli->connect_error;
             return $res;
         }
 
@@ -95,18 +93,18 @@ Class Database {
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
-            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = "Connect Error (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
             return $res;
         }
+
+        $id = $mysqli->real_escape_string($id);
 
         $sql = 'SELECT *
                 FROM user_permissions
                 WHERE ID = "' . $id . '"';
 
-        $sql = $mysqli->real_escape_string($sql);
-
         if (!$result = $mysqli->query($sql)) {
-            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
+            $res["message"] = "SQL:\n" . $sql . "\n Num error: " . $mysqli->connect_errno . "\n" . $mysqli->connect_error;
             return $res;
         }
 
@@ -133,16 +131,21 @@ Class Database {
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
-            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = "Connect Error (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
             return $res;
         }
 
         $timestamp = date("Y-m-d H:i:s");
 
-        $sql = 'INSERT INTO user_info (GIVEN_NAME, FAMILY_NAME, EMAIL, USERNAME, TIMESTAMP)
-                    VALUE ("' . $name . '", "' . $surname . '", "' . $email . '", "' . $login . '", "' . $timestamp . '")';
+        $email = $mysqli->real_escape_string($email);
+        $name = $mysqli->real_escape_string($name);
+        $surname = $mysqli->real_escape_string($surname);
+        $login = $mysqli->real_escape_string($login);
+        $password = $mysqli->real_escape_string($password);
 
-        $sql = $mysqli->real_escape_string($sql);
+
+        $sql = 'INSERT INTO user_info (GIVEN_NAME, FAMILY_NAME, EMAIL, LOGIN, DATE_REGISTER, PASS)
+                    VALUE ("' . $name . '", "' . $surname . '", "' . $email . '", "' . $login . '", "' . $timestamp . '", "' . MD5($password) . '")';
 
         if ($mysqli->query($sql)) {
             $sql = 'SELECT *
@@ -151,15 +154,11 @@ Class Database {
 
             $userId = $mysqli->query($sql)->fetch_assoc()["ID"];
 
-            $sql = 'INSERT INTO user_authorize (ID, LOGIN, PASS)
-                    VALUE ("' . $userId . '", "' . $login . '", "' . MD5($password) . '")';
-            $mysqli->query($sql);
-
             $sql = 'INSERT INTO user_permissions (ID)
                     VALUE ("' . $userId . '")';
             $mysqli->query($sql);
         } else {
-            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
+            $res["message"] = "SQL:\n" . $sql . "\n Num error: " . $mysqli->connect_errno . "\n" . $mysqli->connect_error;
         }
 
         $res = [
@@ -170,13 +169,7 @@ Class Database {
         return $res;
     }
 
-    /**
-     * @param $userId    =
-     * @param $sessionId = $_COOKIE["PHPSESSID"]
-     * @param $userAgent = $_SERVER["HTTP_USER_AGENT"]
-     * @param $ipAddress = $_SERVER["HTTP_CLIENT_IP"]
-     */
-    public static function addSessionInfo($userId, $sessionId, $userAgent, $ipAddress) {
+    public static function addSessionInfo($userId) {
         $res = [
             "success" => false,
             "message" => "Unknown error in Database.addSessionInfo"
@@ -185,19 +178,22 @@ Class Database {
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
-            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = "Connect Error (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
             return $res;
         }
 
         $timestamp = date("Y-m-d H:i:s");
 
-        $sql = 'INSERT INTO user_info (ID, SESSION_ID, USER_AGENT, IP_ADDRESS, TIMESTAMP)
+        $userId = $mysqli->real_escape_string($userId);
+        $sessionId = $mysqli->real_escape_string($_COOKIE["PHPSESSID"]);
+        $userAgent = $mysqli->real_escape_string($_SERVER["HTTP_USER_AGENT"]);
+        $ipAddress = $mysqli->real_escape_string($_SERVER["HTTP_CLIENT_IP"]);
+
+        $sql = 'INSERT INTO user_info (ID, SESSION_ID, USER_AGENT, IP_ADDRESS, LAST_LOGIN)
                     VALUE ("' . $userId . '", "' . $sessionId . '", "' . $userAgent . '", "' . $ipAddress . '", "' . $timestamp . '")';
 
-        $sql = $mysqli->real_escape_string($sql);
-
         if (!$result = $mysqli->query($sql)) {
-            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
+            $res["message"] = "SQL:\n" . $sql . "\n Num error: " . $mysqli->connect_errno . "\n" . $mysqli->connect_error;
             return $res;
         }
 
@@ -206,6 +202,50 @@ Class Database {
             "message" => "OK"
         ];
 
+        return $res;
+    }
+
+    public static function updateUser($user) {
+        $res = [
+            "success" => false,
+            "message" => "Unknown error in Database.addSessionInfo"
+        ];
+
+        if ($user->getId() == null) {
+            return self::createUser($user->getEmail(), $user->getName(), $user->getSurname(), $user->getLogin(), $user->getPassword());
+        } else {
+            $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
+            if ($mysqli->connect_errno) {
+                $res["message"] = "Connect Error (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+                return $res;
+            }
+
+            $id = $mysqli->real_escape_string($user->getId());
+            $email = $mysqli->real_escape_string($user->getEmail());
+            $name = $mysqli->real_escape_string($user->getName());
+            $surname = $mysqli->real_escape_string($user->getSurname());
+            $login = $mysqli->real_escape_string($user->getLogin());
+            $pass = $mysqli->real_escape_string(md5($user->getPassword()));
+
+            $sql = 'UPDATE user_info
+                    SET GIVEN_NAME = "' . $name . '",
+                        FAMILY_NAME = "' . $surname . '",
+                        EMAIL = "' . $email . '",
+                        LOGIN = "' . $login . '",
+                        PASS = "' . $pass . '"
+                    WHERE ID = "' . $id . '"';
+
+            if (!$result = $mysqli->query($sql)) {
+                $res["message"] = "SQL:\n" . $sql . "\n Num error: " . $mysqli->connect_errno . "\n" . $mysqli->connect_error;
+                return $res;
+            }
+
+            $res = [
+                "success" => true,
+                "message" => "OK"
+            ];
+        }
         return $res;
     }
 
@@ -218,39 +258,30 @@ Class Database {
         $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
         if ($mysqli->connect_errno) {
-            $res["message"] = 'Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+            $res["message"] = "Connect Error (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
             return $res;
         }
 
+        $userId = $mysqli->real_escape_string($user->getId());
+
         $sql = 'DELETE
                 FROM user_info
-                WHERE ID = "' . $user->getId() . '"';
-
-        $sql = $mysqli->real_escape_string($sql);
+                WHERE ID = "' . $userId . '"';
 
         if ($mysqli->query($sql)) {
             $sql = 'DELETE
                     FROM user_auth_log
-                    WHERE ID = "' . $user->getId() . '"';
+                    WHERE ID = "' . $userId . '"';
 
-            $sql = $mysqli->real_escape_string($sql);
-            $mysqli->query($sql);
-
-            $sql = 'DELETE
-                    FROM user_authorize
-                    WHERE ID = "' . $user->getId() . '"';
-
-            $sql = $mysqli->real_escape_string($sql);
             $mysqli->query($sql);
 
             $sql = 'DELETE
                     FROM user_permission
-                    WHERE ID = "' . $user->getId() . '"';
+                    WHERE ID = "' . $userId . '"';
 
-            $sql = $mysqli->real_escape_string($sql);
             $mysqli->query($sql);
         } else {
-            $res["message"] = 'SQL:\n' . $sql . '\n Num error:\n' . $mysqli->connect_errno . '\n' . $mysqli->connect_error;
+            $res["message"] = "SQL:\n" . $sql . "\n Num error: " . $mysqli->connect_errno . "\n" . $mysqli->connect_error;
             return $res;
         }
 
