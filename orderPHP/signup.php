@@ -1,10 +1,10 @@
 <?php
 
-foreach (glob($_SERVER['DOCUMENT_ROOT'] . "/classes/*.php") as $filename) {
-    require_once $filename;
-}
-
+require_once $_SERVER['DOCUMENT_ROOT'] . '/include.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/html/signup.html';
+
+session_start();
+
 if (isset($_POST["email"]) && isset($_POST["pass"])) {
     $response = Order\Database::createUser($_POST["email"], $_POST["name"], $_POST["surname"], $_POST["login"], $_POST["pass"]);
     if ($response["success"]) {

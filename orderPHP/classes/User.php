@@ -13,6 +13,12 @@ class User implements Save, Entity {
 
     function __construct() {
         $this->id = null;
+        $this->name = "";
+        $this->surname = "";
+        $this->email = "";
+        $this->username = "";
+        $this->password = "";
+
     }
 
     function __destruct() {

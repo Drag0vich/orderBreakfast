@@ -2,6 +2,8 @@
 
 namespace Order;
 require_once $_SERVER['DOCUMENT_ROOT'] . '/include.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/interface/entity.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/interface/save.php';
 
 Class Database {
     public static function getUserInfoById($id) {
