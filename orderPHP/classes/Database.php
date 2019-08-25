@@ -34,10 +34,12 @@ Class Database {
 
         }
 
+        $user = User::fromArray($result->fetch_assoc());
+
         $res = [
             "success" => true,
             "message" => "OK",
-            "data" => $result->fetch_assoc()
+            "data" => $user
         ];
 
         return $res;
