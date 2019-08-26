@@ -189,9 +189,9 @@ Class Database {
         $userId = $mysqli->real_escape_string($userId);
         $sessionId = $mysqli->real_escape_string($_COOKIE["PHPSESSID"]);
         $userAgent = $mysqli->real_escape_string($_SERVER["HTTP_USER_AGENT"]);
-        $ipAddress = $mysqli->real_escape_string($_SERVER["HTTP_CLIENT_IP"]);
+        $ipAddress = $mysqli->real_escape_string($_SERVER["REMOTE_ADDR"]);
 
-        $sql = 'INSERT INTO user_info (ID, SESSION_ID, USER_AGENT, IP_ADDRESS, LAST_LOGIN)
+        $sql = 'INSERT INTO user_auth_log (ID, SESSION_ID, USER_AGENT, IP_ADDRESS, TIMESTAMP)
                     VALUE ("' . $userId . '", "' . $sessionId . '", "' . $userAgent . '", "' . $ipAddress . '", "' . $timestamp . '")';
 
         if (!$result = $mysqli->query($sql)) {
@@ -290,6 +290,52 @@ Class Database {
         $res = [
             "success" => true,
             "message" => "OK"
+        ];
+
+        return $res;
+    }
+
+    public static function getAuthInfoByUserId($id) {
+        $res = [
+            "success" => false,
+            "message" => "Unknown error in Database.getUserInfoById"
+        ];
+
+        $mysqli = new \mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
+        if ($mysqli->connect_errno) {
+            $res["message"] = "Connect Error (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+            return $res;
+        }
+
+        $id = $mysqli->real_escape_string($id);
+        $sessionId = $mysqli->real_escape_string($_COOKIE["PHPSESSID"]);
+        $userAgent = $mysqli->real_escape_string($_SERVER["HTTP_USER_AGENT"]);
+        $ipAddress = $mysqli->real_escape_string($_SERVER["REMOTE_ADDR"]);
+
+        $sql = 'SELECT MAX(TIMESTAMP)
+                FROM user_auth_log
+                WHERE ID = "' . $id . '"
+                    AND SESSION_ID = "' . $sessionId . '"
+                    AND USER_AGENT = "' . $userAgent . '"
+                    AND IP_ADDRESS = "' . $ipAddress . '"
+                    GROUP BY ID';
+
+        if (!$result = $mysqli->query($sql)) {
+            $res["message"] = "SQL:\n" . $sql . "\n Num error: " . $mysqli->connect_errno . "\n" . $mysqli->connect_error;
+            return $res;
+        }
+
+        if ($result->num_rows === 0) {
+            $res["message"] = "It is not you";
+            return $res;
+
+        }
+
+        $res = [
+            "success" => true,
+            "message" => "OK",
+            "data" => $result->fetch_assoc()
         ];
 
         return $res;
